@@ -14,41 +14,35 @@ public class UnoTest {
 		String[] deckUno = { "black_5", "empty", "empty", "empty", "empty" };
 		
 		
+		UnoCard cDeck = new UnoCard();
+		cDeck.createDeck();
+		cDeck.shuffleDeck();
+		String[] startDraw = cDeck.dealHand(5);
+		
+		
 		Player player1 = new Player();
-		player1.playerInit(5, deck1, "Jerry");
 		
-		Player player2 = new Player();
-		player2.playerInit(5, deckFull, "Oscar");
-		
-		Player player3 = new Player();
-		player3.playerInit(5, deckUno, "Gob");
-		
+//		Player player2 = new Player();
+//		player2.playerInit(5, deckFull);
+//		
+//		Player player3 = new Player();
+//		player3.playerInit(5, deckUno);
 		
 		
 		
-		System.out.println(player1.toString());
-		deck1[1] = "blue_6";
-		System.out.println("Deck 1 Values: " + Arrays.toString(deck1));
-		System.out.println(player1.toString());
+		System.out.println("Start Draw array " + Arrays.toString(startDraw));
+		player1.playerInit(10, startDraw);
 		
-		player1.validHand("blue");
-		player1.clearHand();
-		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		
-		System.out.println(player2.toString());
-		
-		
-		//player2.knockOutPlayer();
-		player2.playerTurn("green_5");
+		player1.playerTurn("green_5");
 		
 		
 		
 		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println(player3.toString());
-		player3.playerTurn("blue_3");
-		System.out.println(player3.toString());
+		//String cardPicker = pickCard(unoDeck);
+		//System.out.println("Show me string: " + cardPicker);
+		//System.out.println(player1.toString());
+		
+		
 	}
 
 }
