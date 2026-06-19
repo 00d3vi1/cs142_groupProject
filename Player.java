@@ -5,7 +5,6 @@ import java.util.Scanner;
 public class Player {
 	private String[] hand;
 	private boolean hasUno;
-	private boolean validPlayer;
 	private boolean playerTurn; // might change into just a method
 	private String playerName;
 	private int maxHand;
@@ -20,7 +19,6 @@ public class Player {
 		this.startingDraw(hand); 
 		this.setUno(); // declares Uno! when one card is left
 		this.setPlayerTurn(false); // Intended to disable a "player" when they exceed max hand count
-		//this.validPlayer(); // Set to true to allow "player" control
 	}
 	
 	
@@ -64,10 +62,6 @@ public class Player {
 		return playerTurn;
 	}
 	
-	public void setValidPlayer() {
-		this.validPlayer = true;
-	}
-	
 	public void setDiscardPile(String discardPile) { // don't put in constructor
 		this.discardPile = discardPile;
 	}
@@ -94,9 +88,6 @@ public class Player {
 	public boolean getPlayerTurn() { // might remove
 		return this.playerTurn;
 	}
-	public boolean getvalidPlayer() {
-		return this.validPlayer;
-	}
 	public int getMaxHand() {
 		return this.maxHand;
 	}
@@ -115,7 +106,7 @@ public class Player {
 	
 	
 	// Main turn function 2nd draft
-	public void playerTurn(String discardPile) {
+	public void playerTurn(String discardPile) { // maybe pre-draw from top deck when calling this
 		int emptyTally = 0;
 		int cardTally = 0;
 		
@@ -138,10 +129,39 @@ public class Player {
 		this.knockOutPlayer(emptyTally); // Checks the empty and outputs based on value
 		this.hasUno(cardTally); // checks for Uno based on how many cards have been counted.
 		this.setDiscardPile(discardPile); // had problems with values not passing through
-		this.validHand(this.discardPile); // -> pickCard() -> playCard() unfinished -> endTurn();
-										  // OR            -> drawCard() -> check if playable -> endTurn();
+		System.out.println("Discard Pile: " + this.discardPile);
+		//this.validHand(this.discardPile); // -> pickCard() -> playCard() unfinished -> endTurn();
+										  // OR -> drawCard() -> check if playable -> endTurn();
 		
-		// play card
+		
+		if(this.validHand(this.discardPile) == true && hasUno) {
+			sortHand(pickCard(this.playable));
+			System.out.println("YOU WON UNO!");
+		}
+		else if(this.validHand(this.discardPile) == true) {
+			// remove pickcard from this.hand
+			sortHand(pickCard(this.playable));
+			System.out.println(this.playerName + "'s hand: " + Arrays.toString(this.hand));
+		}
+		else {
+			System.out.println("No playable cards. Call Draw Card method");
+			drawCard("green_4");
+			System.out.println(this.playerName + "'s hand: " + Arrays.toString(this.hand)); // MARK FOR DELETE
+			//validHandDraw();
+		}
+		
+		
+	}
+	
+	public void sortHand(String removeCard) {
+		this.setDiscardPile(removeCard);
+		for(int i = 0; i < this.hand.length; i++) {
+			if(this.hand[i] == removeCard) {
+				this.hand[i] = "empty";
+				// shift everything to the left to fill the hole
+				break;
+			}
+		}	
 	}
 	
 	
@@ -155,8 +175,6 @@ public class Player {
 				System.out.print((i + 1) + ") " + hand[i] + " ");
 			}
 		}
-		
-		//System.out.println();
 	}
 	
 	// Takes in the playable cards from the hand and allows the player to 
@@ -210,60 +228,49 @@ public class Player {
 	
 
 	// gives the player a list of playable options that is compared to the discard pile -> pickCard() 
-	public void validHand(String discardPile) {
+	public boolean validHand(String discardPile) {
 		String[] dpMatch = discardPile.split("_");
 		String[] temp = new String[maxHand];
 		int pTrack = 0;
+		boolean validHand = false;;
 		for(int i = 0; i < this.hand.length; i++) {
 			if(this.hand[i].startsWith(dpMatch[0]) || this.hand[i].endsWith(dpMatch[1])) {
 				temp[pTrack] = this.hand[i];
 				pTrack++;
 			}
 		}
-		if(pTrack == 0) {
-			System.out.println("No playable cards. Call Draw Card method");
-			// then check if the new card is playable then end turn or play card/end turn
-			return;
-		}
 		if(pTrack > 0) {
 			this.playable = temp;
-			//System.out.println(Arrays.toString(this.playable));
-			pickCard(this.playable);
+			return validHand = true;
 		}
-//		this.playable = temp;
-//		
-//		pickCard(this.playable);
+		return validHand;
 	}
 	
+	// 2nd call when a card is drawn
+	public boolean validHandDraw(String drawnCard) {
+		String[] dcMatch = drawnCard.split("_");
+		String[] dpMatch = this.discardPile.split("_");
+		if(dcMatch[0] == dpMatch[0] || dcMatch[1] == dpMatch[1]) {
+			System.out.println("drawn card played");
+			return true; // play card
+		}
+		return false; // end turn by letting the loop end
+	}
 	
+	public void drawCard(String newCard) {
+		for(int i = 0; i < this.hand.length; i++) {
+			if(this.hand[i] == "empty") {
+				this.hand[i] = newCard;
+				break;
+			}
+		}
+	}
 	
 	
 	// intended for the skip turn card. should handle this from the main file
 	// repurpose for endTurn()?
 	public void passTurn() { // MARK FOR DELETE - METHOD
 		playerTurn = false;
-	}
-		
-	
-	
-	
-	// EDIT PRIO - Start from scratch, pull from UnoCard.java
-	// I think this just needs to be called from the main file, create 2 methods.
-	// one draw card to take in just a string, then another to take a string[] that
-	// then adds it to the hand. 
-	public void drawXCards(int drawNum, String card1, String card2, int emptySlot) { 
-		// Intended to be a flexible drawCard method to be reusable with draw, draw 2, draw 4
-		// when it is complete
-		boolean inBounds = emptySlot >= drawNum;
-		if(inBounds) {
-			for(int i = 0; i < this.hand.length; i++) {
-				// adjust this to account for String[].length for a flexible draw method
-				if(this.hand[i] == "empty" && this.hand[i+1] == "empty") {
-					this.hand[i] = card1;
-					this.hand[i+1] = card2;
-				}
-			}
-		}
 	}
 	
 
@@ -280,7 +287,7 @@ public class Player {
 
 	// Checks if there is an hand overload to knock out a player
 	public void knockOutPlayer(int emptySlots) { 
-		if(emptySlots == 0) { // AND no playable cards...
+		if(emptySlots == 0) { 
 			knockOutPlayer();
 			return;
 		}
@@ -293,8 +300,8 @@ public class Player {
 
 	public void winCheck() { // WORKS ATM
 		if(this.hand[0] == "empty") {
-			validPlayer = false; // i dont remember what this is for
 			System.out.println(playerName + " has won Uno!");
+			// something to end the game with
 		}
 	}
 	
@@ -311,6 +318,9 @@ public class Player {
 		
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	
+	
+	
 	
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
