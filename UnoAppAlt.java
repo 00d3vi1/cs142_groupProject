@@ -448,7 +448,7 @@ public class UnoAppAlt {
 				}
 			}
 		}
-	}
+	} //method shuffle end
 	
 	//returns how many slots in a deck array are filled
 	public static int totalCardsLeft(int[] deck) {
@@ -459,5 +459,5 @@ public class UnoAppAlt {
 			}
 		}
 		return count;
-	}
+	} //method totalCardsLeft end
 }
