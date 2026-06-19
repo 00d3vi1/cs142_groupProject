@@ -12,6 +12,7 @@ public class UnoAppAlt {
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in); //establishes scanner
 		int players = -1;
+		//sets up variable playercount from player input
 		while(players < 2 || players > 8) {
 			System.out.println("From 1-7, how many enemies would you like?");
 			String playerInput = scanner.nextLine();
