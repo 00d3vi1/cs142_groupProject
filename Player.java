@@ -1,40 +1,49 @@
 import java.util.Arrays;
 import java.util.Scanner;
+import java.io.*;
 
 
 public class Player {
 	private String[] hand;
 	private boolean hasUno;
-	private boolean playerTurn; // might change into just a method
+	private boolean isKnockedOut; // might change into just a method
 	private String playerName;
 	private int maxHand;
 	private String discardPile;
 	private String playable[];
+	private String discardOut;	
+	
+	final static String ANSI_YELLOW = "\u001B[33m";
+	final static String ANSI_GREEN = "\u001B[32m";
+	final static String ANSI_RED = "\u001B[31m";
+	final static String ANSI_BLUE = "\u001B[36m";
+	
+	
 	
 	// Constructor
 	public void playerInit(int maxHand, String[] hand) {
 		this.setPlayableCards();
 		this.setName();
 		this.setHand(maxHand); // Creating the size of the hand array
-		this.startingDraw(hand); 
+		this.startingDraw(hand); // initializing the starting hand
 		this.setUno(); // declares Uno! when one card is left
-		this.setPlayerTurn(false); // Intended to disable a "player" when they exceed max hand count
+		this.setKnockedOut(false); // Intended to disable a "player" when they exceed max hand count
 	}
 	
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	// Setters
 	
+	// fills the this.hand[] with values from the string[] that is passed into the setter		
 	public void startingDraw(String[] hand) { 
-		// fills the this.hand[] with values from the string[] that is passed into the setter		
 		for(int i = 0; i < hand.length; i++) {
 			this.hand[i] = hand[i];
 		}
 	}
 		
+	// creates the size of the array depending on a max size and fills it with "empty"
+	// to make override toString() functional. 
 	public void setHand(int handSize) {
-		// creates the size of the array depending on a max size and fills it with "empty"
-		// to make override toString() functional. 
 		this.hand = new String[handSize]; 
 		this.maxHand = handSize;
 		for(int i = 0; i < this.hand.length; i++) {
@@ -42,6 +51,7 @@ public class Player {
 		}
 	}
 	
+	// takes user input to create the player name
 	public void setName() {
 		Scanner nameInput = new Scanner(System.in);
 		System.out.print("Enter your Name: ");
@@ -57,9 +67,9 @@ public class Player {
 		this.hasUno = false;
 	}
 	
-	public boolean setPlayerTurn(boolean isYourTurn) {
-		playerTurn = isYourTurn; // probably useless?
-		return playerTurn;
+	public boolean setKnockedOut(boolean koStatus) {
+		this.isKnockedOut = koStatus; // probably useless?
+		return koStatus;
 	}
 	
 	public void setDiscardPile(String discardPile) { // don't put in constructor
@@ -69,6 +79,15 @@ public class Player {
 	public void setPlayableCards() {
 		this.playable = new String[maxHand];
 	}
+	
+	public void setDiscardOut(String discardOut) {
+		this.discardOut = discardOut;
+	}
+	
+	public static void setColor(String color) {
+		System.out.print(color);
+	}
+	
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	
@@ -85,8 +104,8 @@ public class Player {
 	public boolean getUno() {
 		return this.hasUno;
 	}
-	public boolean getPlayerTurn() { // might remove
-		return this.playerTurn;
+	public boolean getIsKnockedOut() { // might remove
+		return this.isKnockedOut;
 	}
 	public int getMaxHand() {
 		return this.maxHand;
@@ -97,6 +116,9 @@ public class Player {
 	public String[] getPlayable() {
 		return this.playable;
 	}
+	public String getDiscardOut() {
+		return this.discardOut;
+	}
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 	
@@ -105,13 +127,11 @@ public class Player {
 	// player input functions
 	
 	
-	// Main turn function 2nd draft
-	public void playerTurn(String discardPile) { // maybe pre-draw from top deck when calling this
+	// Handles the player Turn Loop
+	public void playerTurn(String discardPile, String draw) { // maybe pre-draw from top deck when calling this
 		int emptyTally = 0;
 		int cardTally = 0;
 		
-		// catches the remaining cards and tracks how much space is left until a
-		// knockout (aka: exceeding max hand amount to have a hard cap to prevent long games)
 		for(int i = 0; i < this.hand.length; i++) {
 			if(this.hand[i] == "empty") {
 				emptyTally++;
@@ -125,34 +145,44 @@ public class Player {
 //		System.out.println("Card Total: " + cardTally);
 //		System.out.println("Empty Slots: " + emptyTally);
 		
-		
 		this.knockOutPlayer(emptyTally); // Checks the empty and outputs based on value
 		this.hasUno(cardTally); // checks for Uno based on how many cards have been counted.
 		this.setDiscardPile(discardPile); // had problems with values not passing through
+		setColor(ANSI_GREEN);
 		System.out.println("Discard Pile: " + this.discardPile);
-		//this.validHand(this.discardPile); // -> pickCard() -> playCard() unfinished -> endTurn();
-										  // OR -> drawCard() -> check if playable -> endTurn();
 		
 		
+		// win condition
 		if(this.validHand(this.discardPile) == true && hasUno) {
 			sortHand(pickCard(this.playable));
-			System.out.println("YOU WON UNO!");
+			System.out.println(this.playerName + " WON UNO!");
 		}
+		// play card if you have matching cards
 		else if(this.validHand(this.discardPile) == true) {
 			// remove pickcard from this.hand
 			sortHand(pickCard(this.playable));
 			System.out.println(this.playerName + "'s hand: " + Arrays.toString(this.hand));
 		}
+		// draw card and check if the drawn card is playable
 		else {
-			System.out.println("No playable cards. Call Draw Card method");
-			drawCard("green_4");
-			System.out.println(this.playerName + "'s hand: " + Arrays.toString(this.hand)); // MARK FOR DELETE
-			//validHandDraw();
+			System.out.println("No playable cards. Drawing card");
+			//String draw = "green_4"; // mark for delete
+
+			if(validHandDraw(draw)) {
+				this.setDiscardOut(draw);
+			}
+			else {
+				drawCard(draw);
+			}
+			
+			System.out.println(ANSI_BLUE + this.playerName + "'s hand: " + Arrays.toString(this.hand)); // MARK FOR DELETE
+			setColor(ANSI_GREEN);
 		}
 		
 		
 	}
 	
+	// removes card from hand as a result of "playing" it
 	public void sortHand(String removeCard) {
 		this.setDiscardPile(removeCard);
 		for(int i = 0; i < this.hand.length; i++) {
@@ -165,7 +195,7 @@ public class Player {
 	}
 	
 	
-	// used with pickCard() to display the playable cards
+	// used with pickCard() to display the playable cards for quality of life
 	public static void getPlayableCards(String[] hand) {
 		System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		System.out.print("Playable Cards: ");
@@ -179,7 +209,7 @@ public class Player {
 	
 	// Takes in the playable cards from the hand and allows the player to 
 	// select a card via card slot number
-	public static String pickCard(String[] hand) {
+	public String pickCard(String[] hand) {
 		boolean validChoice = false;
 		boolean numerical = false;
 		int choiceCheck = -1;
@@ -223,9 +253,9 @@ public class Player {
 				
 		chooseCard.close();
 		// replace the return type to call either playCard() or drawCard()->playCard() or endTurn()
+		this.setDiscardOut(choice);
 		return choice;
 	}
-	
 
 	// gives the player a list of playable options that is compared to the discard pile -> pickCard() 
 	public boolean validHand(String discardPile) {
@@ -246,17 +276,23 @@ public class Player {
 		return validHand;
 	}
 	
-	// 2nd call when a card is drawn
+	// 2nd call when a card is drawn to see if it's playable
 	public boolean validHandDraw(String drawnCard) {
 		String[] dcMatch = drawnCard.split("_");
 		String[] dpMatch = this.discardPile.split("_");
-		if(dcMatch[0] == dpMatch[0] || dcMatch[1] == dpMatch[1]) {
-			System.out.println("drawn card played");
-			return true; // play card
+		boolean match = false;
+		
+		for(int i = 0; i < dcMatch.length; i++) {
+			if(dpMatch[i].contains(dcMatch[i])) {
+				System.out.println(drawnCard + " drawn card played");
+				match = true;
+				break;
+			}
 		}
-		return false; // end turn by letting the loop end
+		return match;
 	}
 	
+	// adds card to hand
 	public void drawCard(String newCard) {
 		for(int i = 0; i < this.hand.length; i++) {
 			if(this.hand[i] == "empty") {
@@ -265,22 +301,14 @@ public class Player {
 			}
 		}
 	}
-	
-	
-	// intended for the skip turn card. should handle this from the main file
-	// repurpose for endTurn()?
-	public void passTurn() { // MARK FOR DELETE - METHOD
-		playerTurn = false;
-	}
-	
 
-	
-	public void knockOutPlayer() { // General call. may be redundant or just remove them from main file
+	// When knocked out, the player is disabled
+	public void knockOutPlayer() { 
 		for(int i = 0; i < this.hand.length; i++) {
 			if(hand[i] != "empty") {
-				System.out.println(playerName + " has been knocked out!");
+				System.out.println(ANSI_RED + playerName + " has been knocked out!");
+				this.setKnockedOut(true);
 				break;
-				// Needs to disable the player involved. So that boolean may be needed. 
 			}
 		}
 	}
@@ -297,15 +325,14 @@ public class Player {
 		}
 	}
 	
-
-	public void winCheck() { // WORKS ATM
+	public void winCheck() { 
 		if(this.hand[0] == "empty") {
 			System.out.println(playerName + " has won Uno!");
 			// something to end the game with
 		}
 	}
 	
-	// checks for Uno
+	// checks if player has Uno and 
 	public void hasUno(int cardAmount) {
 		if(cardAmount > 1) {
 			this.hasUno = false;
@@ -318,9 +345,6 @@ public class Player {
 		
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-	
-	
-	
 	
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
