@@ -161,6 +161,7 @@ public class Player {
 		else if(this.validHand(this.discardPile) == true) {
 			// remove pickcard from this.hand
 			sortHand(pickCard(this.playable));
+			organizeHand();
 			System.out.println(this.playerName + "'s hand: " + Arrays.toString(this.hand));
 		}
 		// draw card and check if the drawn card is playable
@@ -174,7 +175,7 @@ public class Player {
 			else {
 				drawCard(draw);
 			}
-			
+			organizeHand();
 			System.out.println(ANSI_BLUE + this.playerName + "'s hand: " + Arrays.toString(this.hand)); // MARK FOR DELETE
 			setColor(ANSI_GREEN);
 		}
@@ -344,7 +345,29 @@ public class Player {
 		}
 		
 	}
+	
+	public void organizeHand() {
+		String temp = "";
+		int emptyIndex = -1;
+		boolean firstEmpty = false;
+		
+		for(int i = 0; i < this.hand.length; i++) {
+			if(this.hand[i] == "empty" && firstEmpty == false) {
+				emptyIndex = i;
+				firstEmpty = true;
+			}
+			if(firstEmpty == true && this.hand[i] != "empty") {
+				temp = this.hand[i];
+				this.hand[emptyIndex] = temp;
+				emptyIndex++;
+			}
+		
+		}
+	}
+	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	
+	
 	
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -371,8 +394,6 @@ public class Player {
 	public String toString() {
 		return this.playerName + "'s Hand: " + Arrays.toString(this.hand);
 	}
-
-	
 	
 	
 }
